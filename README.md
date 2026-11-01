@@ -54,3 +54,26 @@ Im Repo liegt nur Code. Daten und trainierte Modelle sind zu groß für Git und 
 ## Zusammenarbeit
 
 - Die Aufgaben planen wir im GitHub-Kanban-Board des Repos.
+
+## Einrichtung
+
+Voraussetzung ist [uv](https://docs.astral.sh/uv/). Python 3.12 lädt uv bei Bedarf selbst herunter.
+
+```bash
+git clone https://github.com/shivotno/data-science-project.git
+cd data-science-project
+uv sync
+```
+
+`uv sync` legt das `.venv` an und installiert genau die Versionen aus `uv.lock`.
+Befehle im Projekt mit `uv run` ausführen, z. B. `uv run python skript.py`.
+
+### Pakete hinzufügen oder entfernen
+
+```bash
+uv add paketname
+uv remove paketname
+```
+
+Danach `pyproject.toml` und `uv.lock` zusammen committen.
+Nach einem `git pull` mit geänderter `uv.lock` einmal `uv sync` ausführen.
