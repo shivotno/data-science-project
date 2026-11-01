@@ -1,0 +1,17 @@
+# Python-Umgebung und Cache
+.venv/
+__pycache__/
+*.pyc
+
+# Daten und Modelle liegen in der Cloud, nicht im Repo
+data/
+models/
+*.duckdb
+*.pt
+*.pth
+
+# Notebooks und Editor
+.ipynb_checkpoints/
+.vscode/
+.idea/
+.DS_Store
