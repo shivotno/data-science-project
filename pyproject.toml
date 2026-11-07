@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "duckdb>=2.0.0",
+    "plotly>=7.1.0",
     "streamlit>=1.66.1",
     "torch>=2.15.0",
     "torchvision>=0.29.2",
