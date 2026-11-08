@@ -1,6 +1,6 @@
 # Datenexploration Rebrickable-CSVs (Issue #5)
 
-Notizen aus der Exploration der Rebrickable-Dateien in `data/raw/` (entpackt als `.csv`). Grundlage für das Build-Skript. Exploration abgeschlossen am 01.11.2026.
+Notizen aus der Exploration der Rebrickable-Dateien in `data/raw/` (entpackt als `.csv`). Grundlage für das Build-Skript. Exploration abgeschlossen am 01.11.2026, Korrektur zu `part_categories` am 08.11.2026.
 
 ## Konsequenzen für das Build-Skript (Zusammenfassung)
 
@@ -40,7 +40,7 @@ Notizen aus der Exploration der Rebrickable-Dateien in `data/raw/` (entpackt als
 ## part_categories.csv
 
 - **Spalten:** `id` (int64), `name` (varchar). Flache Liste ohne Hierarchie.
-- **77 Kategorien**, IDs 1–78. **ID 2 fehlt** → IDs sind nicht lückenlos, nicht davon ausgehen.
+- **76 Kategorien** (per `count(*)` im Build bestätigt), IDs 1–78 mit Lücken (u. a. ID 2 fehlt) → IDs sind nicht lückenlos, nicht davon ausgehen.
 - **Kategorie 58 = Stickers.**
 - Namen bilden informelle Gruppen über Präfixe: `Bricks …`, `Plates …`, `Tiles …`, `Technic …`, `Minifig …`, `Minidoll …`, `Duplo …`.
 - **Kandidaten für klassische Steine (abhängig vom Inhalt der Tüte):**
@@ -81,7 +81,7 @@ Notizen aus der Exploration der Rebrickable-Dateien in `data/raw/` (entpackt als
 | Plates Wedged | 79 |
 | Technic Bricks | 29 |
 
-- **Ergebnis hat 76 Zeilen, es gibt aber 77 Kategorien** → eine Kategorie hat keine Teile (verschwindet beim INNER JOIN). Für das Projekt unwichtig.
+- **Das Ergebnis hat 76 Zeilen = Anzahl der Kategorien** → jede Kategorie hat mindestens ein Teil. (Korrektur: Früher wurde hier fälschlich von 77 Kategorien und einer leeren Kategorie ausgegangen, weil nur aus dem ID-Bereich geschätzt statt gezählt wurde.)
 - **Drucke blähen die Zahlen auf:** Tiles (3.724) und Bricks (1.829) haben viel mehr Einträge als Plates (148), weil Fliesen und Steine oft bedruckt werden, Platten kaum. Minifig-Kategorien ebenso. Die Zahl der unterschiedlichen *Formen* ist deutlich kleiner.
 
 ## colors.csv
@@ -128,14 +128,21 @@ Notizen aus der Exploration der Rebrickable-Dateien in `data/raw/` (entpackt als
 
 - **Zeilen:** 1.572.772 → mit Abstand die größte Tabelle.
 - **Spalten:** `inventory_id` BIGINT, `part_num` VARCHAR, `color_id` BIGINT, `quantity` BIGINT, `is_spare` BOOLEAN, `img_url` VARCHAR.
+- Eine Zeile = **eine Stücklistenzeile** (Teil + Farbe + Anzahl in einem Inventar), nicht ein einzelner Stein.
 - **Ersatzteile:** 112.096 Zeilen mit `is_spare = true` (rund 7 %), 1.460.676 ohne. `is_spare` wird korrekt als BOOLEAN erkannt.
 - **`img_url`**: Bild des Teils in genau dieser Farbe (teilweise NULL). Evtl. nützlich für die App oder als Vergleichsbild.
 
-## Integritätschecks (alle bestanden)
+## View set_parts (im Build-Skript)
+
+- 1.256.325 Zeilen, 19.912 Sets, keine doppelten Kombinationen aus Set, Teil und Farbe.
+- Plausibilität: 28.561 Sets − 8.384 ohne Teile = 20.177; rund 265 Sets fehlen in der View (vermutlich nur Minifiguren oder Unter-Sets im Inventar). Für den Abgleich unkritisch.
+
+## Integritätschecks (alle bestanden, auch im Build-Skript am 08.11.2026)
 
 | Check | Ergebnis |
 |---|---|
-| Jedes Teil hat eine gültige Kategorie (JOIN-Zeilen = 64.944) | ✅ 64.944 |
+| Jedes Teil hat eine gültige Kategorie | ✅ 0 ohne Kategorie |
 | `inventory_parts` verweist nur auf existierende Teile | ✅ 0 unbekannte |
 | `inventory_parts` verweist nur auf existierende Farben | ✅ 0 unbekannte |
-| `inventories` → `sets` | ❗ 17.344 ohne Set, erklärt durch Minifiguren-Inventare (gewollt) |
+| Keine Tabelle und nicht `set_parts` leer | ✅ |
+| `inventories` → `sets` | ❗ 17.344 ohne Set, erklärt durch Minifiguren-Inventare (gewollt, nicht im Skript geprüft) |
