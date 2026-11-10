@@ -4,6 +4,7 @@ from pathlib import Path
 import streamlit as st
 
 from lego_scanner.preprocessing import sorting
+from lego_scanner.preprocessing.boxes import load_boxes
 
 GROUP_SIZE = 3
 
@@ -26,7 +27,8 @@ if not parts:
 
 @st.cache_data
 def references(render_dir: str, parts: tuple[str, ...]):
-    return {p: sorting.reference_image(Path(render_dir), p) for p in parts}
+    choices = sorting.load_preview_choices(Path(__file__).parent / "vorschaubilder.csv")
+    return {p: sorting.reference_image(Path(render_dir), p, prefer=choices.get(p)) for p in parts}
 
 
 @st.cache_data
@@ -35,8 +37,8 @@ def colors(render_dir: str):
 
 
 @st.cache_data
-def photo_ref(path: str):
-    return sorting.photo_thumbnail(Path(path))
+def photo_ref(path: str, box: tuple[float, float, float, float] | None):
+    return sorting.photo_thumbnail(Path(path), box=box)
 
 
 @st.cache_data(max_entries=20)
@@ -163,7 +165,10 @@ if history:
 st.subheader("3. Teil anklicken")
 query = st.text_input("Teile-Nummer filtern", placeholder="z. B. 3001")
 extra_parts = [p for p in counts if p not in parts and p != sorting.UNCLEAR]
-shown = [p for p in parts + extra_parts if query.strip().lower() in p.lower()]
+shown = sorted(
+    (p for p in parts + extra_parts if query.strip().lower() in p.lower()),
+    key=sorting.part_sort_key,
+)
 
 with st.expander("Teil ist nicht dabei? Neue Teile-Nummer eintragen"):
     st.caption(
@@ -174,12 +179,29 @@ with st.expander("Teil ist nicht dabei? Neue Teile-Nummer eintragen"):
     new_part = n1.text_input("Teile-Nummer", key="new_part", label_visibility="collapsed", placeholder="z. B. 3062b")
     n2.button("Zuordnen", on_click=do_assign_new, args=(group,), width="stretch")
 
+own_boxes = load_boxes(sorted_dir)
+own_rows = sorting.load_labels(sorted_dir)
+
+
+def own_image(row):
+    b = own_boxes.get(row["file"])
+    return photo_ref(str(sorted_dir / row["file"]), (b.x_min, b.y_min, b.x_max, b.y_max) if b else None)
+
+
+def tile_image(part):
+    top = sorting.pick_photo(sorted_dir, own_rows, part, "oben", colored_only=True)
+    if top is None and refs.get(part) is not None:
+        top_img = refs[part]
+    else:
+        top = top or sorting.pick_photo(sorted_dir, own_rows, part, "oben") or sorting.pick_photo(sorted_dir, own_rows, part)
+        top_img = own_image(top) if top else None
+    side = sorting.pick_photo(sorted_dir, own_rows, part, "seite", brick_id=top["brick_id"] if top else "")
+    return sorting.stack_previews(top_img, own_image(side) if side else None)
+
+
 for start in range(0, len(shown), thumb_cols):
     cols = st.columns(thumb_cols)
     for col, part in zip(cols, shown[start : start + thumb_cols]):
         with col:
-            if refs.get(part) is not None:
-                st.image(refs[part], width="stretch")
-            elif (own := sorting.photo_for_preview(sorted_dir, part)) is not None:
-                st.image(photo_ref(str(own)), width="stretch")
+            st.image(tile_image(part), width="stretch")
             st.button(part, key=f"part_{part}", on_click=do_assign, args=(group, part), width="stretch")
