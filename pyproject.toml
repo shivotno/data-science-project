@@ -10,6 +10,7 @@ dependencies = [
     "streamlit>=1.66.1",
     "torch>=2.15.0",
     "torchvision>=0.29.2",
+    "ultralytics>=8.4.213",
 ]
 
 [build-system]
