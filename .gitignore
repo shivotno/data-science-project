@@ -15,3 +15,6 @@ models/
 .vscode/
 .idea/
 .DS_Store
+
+# Testläufe
+runs/
