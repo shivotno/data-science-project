@@ -6,7 +6,7 @@ nur die Trainingsdaten unterscheiden und der Vergleich fair bleibt.
 Für die Bewertung ``last.pt`` verwenden, nicht ``best.pt``.
 
 Start:
-    uv run python -m lego_scanner.training.train_classifier --modell a
+    uv run python -m lego_scanner.training.train --modell a
 """
 
 import argparse
@@ -31,6 +31,7 @@ SETTINGS = {
 
 
 def train(modell: str, data: Path):
+    """Trainiert den Klassifikator und gibt den Pfad zu last.pt zurück."""
     model = YOLO(BASE_MODEL)
     model.train(
         data=str(data), project=str(RUNS_DIR), name=f"modell_{modell}", **SETTINGS
@@ -41,9 +42,9 @@ def train(modell: str, data: Path):
 def main():
     parser = argparse.ArgumentParser(description="Modell A, B oder C trainieren.")
     parser.add_argument(
-        "--modell", choices=["a", "b", "c"], required=True, help="Welches"
+        "--modell", choices=["a", "b", "c"], required=True, help="welcher Datensatz (a, b oder c)"
     )
-    args = parser
+    args = parser.parse_args()
     data = DATA_DIR / "datasets" / f"modell_{args.modell}" / "classify"
     if not data.is_dir():
         raise SystemExit(f"{data} fehlt. Erst build_datasets ausführen.")
