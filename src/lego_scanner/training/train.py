@@ -11,7 +11,9 @@ Start:
 
 import argparse
 from pathlib import Path
+
 from ultralytics import YOLO
+
 from lego_scanner.paths import DATA_DIR, PROJECT_ROOT
 
 BASE_MODEL = "yolo26s-cls.pt"
@@ -27,15 +29,20 @@ SETTINGS = {
     "lr0": 0.0005,
 }
 
+
 def train(modell: str, data: Path):
     model = YOLO(BASE_MODEL)
-    model.train(data=str(data), project=str(RUNS_DIR), name=f"modell_{modell}", **SETTINGS)
+    model.train(
+        data=str(data), project=str(RUNS_DIR), name=f"modell_{modell}", **SETTINGS
+    )
     return Path(model.trainer.save_dir) / "weights" / "last.pt"
 
 
 def main():
     parser = argparse.ArgumentParser(description="Modell A, B oder C trainieren.")
-    parser.add_argument("--modell", choices=["a", "b", "c"], required=True, help="Welches")
+    parser.add_argument(
+        "--modell", choices=["a", "b", "c"], required=True, help="Welches"
+    )
     args = parser
     data = DATA_DIR / "datasets" / f"modell_{args.modell}" / "classify"
     if not data.is_dir():
