@@ -12,7 +12,7 @@ st.set_page_config(page_title="Lego-Sortierer", layout="wide")
 
 with st.sidebar:
     st.header("Ordner")
-    render_dir = Path(st.text_input("Renders (Ordner pro Teil)", "data/renders")).expanduser()
+    render_dir = Path(st.text_input("Renders (Ordner pro Teil)", "data/renders_small")).expanduser()
     unsorted_dir = Path(st.text_input("Unsortierte Fotos", "data/real/unsorted")).expanduser()
     sorted_dir = Path(st.text_input("Ziel für sortierte Fotos", "data/real/sorted")).expanduser()
     thumb_cols = st.slider("Vergleichsbilder pro Zeile", 4, 12, 6)

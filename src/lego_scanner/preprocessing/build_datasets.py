@@ -164,7 +164,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Ordner für Modell A, B und C bauen (siehe docs/PROJEKT.md).")
     parser.add_argument("--renders", type=Path, default=Path("data/renders_small"), help="komprimierte Renders")
     parser.add_argument("--real", type=Path, default=Path("data/real_small/split"), help="echte Fotos, train/test")
-    parser.add_argument("--boxes", type=Path, default=Path("data/real/sorted"), help="Ordner mit boxes.csv")
+    parser.add_argument("--boxes", type=Path, default=Path("data/real_small/sorted"), help="Ordner mit boxes.csv")
     parser.add_argument("--out", type=Path, default=Path("data/datasets"), help="Zielordner")
     parser.add_argument("--crop-size", type=int, default=224, help="Kantenlänge der Ausschnitte in Pixeln")
     args = parser.parse_args()
