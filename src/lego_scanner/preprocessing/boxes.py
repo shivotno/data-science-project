@@ -10,6 +10,10 @@ BOXES_FILE = "boxes.csv"
 BOX_FIELDS = ["file", "x_min", "y_min", "x_max", "y_max", "status"]
 WORK_SIZE = 400
 EDGE_THRESHOLD = 15
+STRONG_EDGE = 60
+CORE_DARK = 0.85
+CORE_EDGE = 20
+BOX_PAD = 0.02
 
 
 @dataclass
@@ -60,6 +64,8 @@ def suggest_box(path: Path) -> Box | None:
     bg = np.asarray(gray.filter(ImageFilter.GaussianBlur(40)), dtype=np.float32)
     darker = (bg - light) / np.maximum(bg, 1)
     edges = np.asarray(gray.filter(ImageFilter.GaussianBlur(1.5)).filter(ImageFilter.FIND_EDGES), dtype=np.float32)
+    sat_bg = np.asarray(Image.fromarray(sat.astype(np.uint8)).filter(ImageFilter.GaussianBlur(40)), dtype=np.float32)
+    sat = sat - sat_bg
 
     mask = (sat > 30) | (darker > 0.5) | (edges > EDGE_THRESHOLD)
     m = 0.03
@@ -71,17 +77,32 @@ def suggest_box(path: Path) -> Box | None:
     mask_img = mask_img.filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.MinFilter(3))
     mask = np.asarray(mask_img) > 0
 
+    strong = (sat > 30) | (darker > 0.5) | (edges > STRONG_EDGE)
     comps = [c for c in _components(mask) if len(c) >= 30]
-    if not comps:
-        return None
-    main = max(comps, key=len)
+    solid = [c for c in comps if strong[c[:, 0], c[:, 1]].sum() >= 8]
+    if not solid:
+        centre = np.array([h / 2, w / 2])
+        central = [c for c in comps if np.hypot(*(c.mean(axis=0) - centre)) < 0.25 * max(h, w)]
+        if not central:
+            return None
+        solid = [max(central, key=len)]
+    main = max(solid, key=len)
     cy, cx = main.mean(axis=0)
-    reach = 0.15 * max(h, w)
-    keep = [c for c in comps if len(c) >= 0.05 * len(main) and np.hypot(*(c.mean(axis=0) - (cy, cx))) < reach]
+    size = max(h, w)
+
+    def near(c, reach):
+        return np.hypot(*(c.mean(axis=0) - (cy, cx))) < reach * size
+
+    keep = [c for c in solid if len(c) >= 0.05 * len(main) and near(c, 0.15)]
+    keep += [c for c in comps if c is not main and not any(c is s for s in solid) and near(c, 0.04)]
     pts = np.concatenate(keep)
+    core = (sat > 30) | (darker > CORE_DARK) | (edges > CORE_EDGE)
+    core_pts = pts[core[pts[:, 0], pts[:, 1]]]
+    if len(core_pts) >= 20:
+        pts = core_pts
     y0, x0 = pts.min(axis=0)
     y1, x1 = pts.max(axis=0) + 1
-    pad = 0.01
+    pad = BOX_PAD
     return Box(
         max(0.0, x0 / w - pad),
         max(0.0, y0 / h - pad),

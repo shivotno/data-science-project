@@ -1,14 +1,5 @@
 # Lego-Scanner: Projektstand und Anleitung
 
-**Daten (Sciebo):** https://fh-dortmund.sciebo.de/s/9ybakJH8NWNSzbo
-
-## Offene Punkte
-
-- [ ] `data/real/sorted/boxes.csv` auf Sciebo hochladen (ohne sie läuft `build_datasets` nicht)
-- [ ] Eigenes Auswertungsskript (vergleicht nach Teilenamen, da train und test unterschiedliche Teile enthalten)
-- [ ] Boxen für die 12 Gruppenfotos (`real_small/gruppen`) ziehen
-- [ ] Skript für den Train/Test-Split ins Repo übernehmen (wurde einmalig außerhalb ausgeführt, Regeln siehe unten)
-
 ## Was wir bisher gemacht haben
 
 1. **Modellwahl:** YOLO26 s, zweistufig: erst Steine finden (Detektor), dann Teil bestimmen (Klassifikator)
